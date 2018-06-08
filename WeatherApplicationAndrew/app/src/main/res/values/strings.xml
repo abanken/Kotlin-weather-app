@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">WeatherApplicationAndrew</string>
+    <string name="txtSplash">Andrew\'s Weather Application</string>
 </resources>
