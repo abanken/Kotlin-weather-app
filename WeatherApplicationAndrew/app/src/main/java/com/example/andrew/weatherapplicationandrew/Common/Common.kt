@@ -1,16 +1,25 @@
 package com.example.andrew.weatherapplicationandrew.Common
 
+import android.widget.EditText
+import org.w3c.dom.Text
 import java.text.SimpleDateFormat
 import java.util.*
 
-object Common{
-    val API_KEY ="4ec1989bc612d21c893ede9e87b864d8"
+object Common {
+    val API_KEY = "4ec1989bc612d21c893ede9e87b864d8"
 
     val API_LINK = "https://api.openweathermap.org/data/2.5/weather"
 
-    fun apiRequest (lat:String, lng:String) :String{
-     var sb = StringBuilder(API_LINK)
+    fun apiRequest(lat: String, lng: String): String {
+        val sb = StringBuilder(API_LINK)
         sb.append("?lat=${lat}&lon=${lng}&APPID=${API_KEY}&units=imperial")
+
+        return sb.toString()
+    }
+    fun apiZipRequest(txtCity: String): String {
+      //  var mytxtZipCode.getText().toString()
+        val sb = StringBuilder(API_LINK)
+        sb.append("?zip=${txtCity},us&APPID=${API_KEY}&units=imperial")
 
         return sb.toString()
     }

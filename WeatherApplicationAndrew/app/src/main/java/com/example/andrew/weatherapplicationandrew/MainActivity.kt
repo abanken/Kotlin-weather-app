@@ -1,23 +1,20 @@
 package com.example.andrew.weatherapplicationandrew
 
 import android.app.AlertDialog
-import android.app.ProgressDialog
 import android.content.DialogInterface
 import android.content.pm.PackageManager
 import android.graphics.Color
-import android.graphics.drawable.Drawable
 import android.location.Location
 import android.os.AsyncTask
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
-import android.support.v4.widget.ImageViewCompat
 import android.util.Log
 import android.view.View
 import android.widget.EditText
+import android.widget.RelativeLayout
 import android.widget.Toast
 import com.example.andrew.weatherapplicationandrew.Common.Common
-import java.time.LocalDateTime
 import com.example.andrew.weatherapplicationandrew.Model.OpenWeatherMap
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GooglePlayServicesUtil
@@ -29,19 +26,18 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.zipcodedialog.*
 import java.text.SimpleDateFormat
-import java.time.LocalTime
 
 
-class MainActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks,GoogleApiClient.OnConnectionFailedListener,LocationListener {
+class MainActivity : AppCompatActivity(),  GoogleApiClient.ConnectionCallbacks,GoogleApiClient.OnConnectionFailedListener,LocationListener {
 
     val PERMISSION_REQUEST_CODE = 1001
     val PLAY_SERVICE_RESOLUTION_REQUEST = 1000
 
 
-
-    var mGoogleApiClient:GoogleApiClient?=null
-    var mLocationRequest:LocationRequest?=null
+    var mGoogleApiClient: GoogleApiClient? = null
+    var mLocationRequest: LocationRequest? = null
     internal var openWeatherMap = OpenWeatherMap()
 
 
@@ -49,80 +45,82 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks,Go
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+
+
         requestPermission();
-        if(checkPlayService())
+        if (checkPlayService())
             buildGoogleApiClient()
     }
-    private fun requestPermission(){
-      if (ActivityCompat.checkSelfPermission(this,android.Manifest.permission.ACCESS_COARSE_LOCATION) !=PackageManager.PERMISSION_GRANTED
-          && ActivityCompat.checkSelfPermission(this,android.Manifest.permission.ACCESS_FINE_LOCATION) !=PackageManager.PERMISSION_GRANTED)
-      {
-          Toast.makeText(this, "Verifying Permissions are granted", Toast.LENGTH_SHORT).show()
-          requestPermissions(arrayOf(android.Manifest.permission.ACCESS_COARSE_LOCATION, android.Manifest.permission.ACCESS_FINE_LOCATION),  PERMISSION_REQUEST_CODE)
-      }
+
+
+
+    private fun requestPermission() {
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            Toast.makeText(this, "Verifying Permissions are granted", Toast.LENGTH_SHORT).show()
+            requestPermissions(arrayOf(android.Manifest.permission.ACCESS_COARSE_LOCATION, android.Manifest.permission.ACCESS_FINE_LOCATION), PERMISSION_REQUEST_CODE)
+        }
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
 
 
+        when (requestCode) {
+            PERMISSION_REQUEST_CODE -> {
+                if (grantResults.size > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(this, "Finding location", Toast.LENGTH_LONG).show()
+                    if (checkPlayService()) {
+                        buildGoogleApiClient()
+                        mGoogleApiClient!!.connect()
+                    }
+
+                } else {
+
+                    val zipcodeDialog: AlertDialog.Builder = AlertDialog.Builder(this)
+                    val zipcodeDialogView = layoutInflater.inflate(R.layout.zipcodedialog, null)
+                    val txtZipcode = zipcodeDialogView.findViewById<EditText>(R.id.txtZipcode)
+
+                    zipcodeDialog.setTitle("Enter A ZipCode")
+                    zipcodeDialog.setView(zipcodeDialogView)
+                    zipcodeDialog.setCancelable(false)
+                    zipcodeDialog.setPositiveButton("Submit", { dialogInterface: DialogInterface, i: Int -> })
+
+                    val customDialog = zipcodeDialog.create()
+                    customDialog.show()
+                    customDialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener({
+                        if (txtZipcode.text.length == 5) {
+
+                            customDialog.dismiss()
+                            mGoogleApiClient!!.connect()
 
 
-      when (requestCode){
-          PERMISSION_REQUEST_CODE -> {
-              if(grantResults.size>0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
-              {
-                  Toast.makeText(this, "Finding location", Toast.LENGTH_LONG).show()
-                  if(checkPlayService())
-                  {
-                      buildGoogleApiClient()
-                      mGoogleApiClient!!.connect()
-                  }
+                            txtCity.text = txtZipcode.editableText
 
-              }
-              else {
+                            GetZipWeather().execute(Common.apiZipRequest(txtCity!!.text.toString()))
 
-              val zipcodeDialog: AlertDialog.Builder = AlertDialog.Builder(this)
-              val zipcodeDialogView= layoutInflater.inflate(R.layout.zipcodedialog,null)
-              val txtZipcode = zipcodeDialogView.findViewById<EditText>(R.id.txtZipcode)
+                        } else
+                            Toast.makeText(baseContext, "Invalid Zipcode Entered", Toast.LENGTH_SHORT).show()
+                    })
+                }
 
-              zipcodeDialog.setTitle("Enter A ZipCode")
-              zipcodeDialog.setView(zipcodeDialogView)
-              zipcodeDialog.setCancelable(false)
-              zipcodeDialog.setPositiveButton("Submit",{ dialogInterface: DialogInterface, i: Int -> })
-
-              val customDialog = zipcodeDialog.create()
-                  customDialog.show()
-                  customDialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener({
-                  if(txtZipcode.text.length == 5){
-
-                      customDialog.dismiss()
-                      txtCity.text = txtZipcode.text}
-                  else
-                      Toast.makeText(baseContext,"Invalid Zipcode Entered", Toast.LENGTH_SHORT).show()
-              })
-                  }
-
-          }
-      }
+            }
+        }
     }
 
     private fun buildGoogleApiClient() {
-       mGoogleApiClient = GoogleApiClient.Builder(this)
-               .addConnectionCallbacks(this)
-               .addOnConnectionFailedListener(this)
-               .addApi(LocationServices.API).build()
+        mGoogleApiClient = GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(LocationServices.API).build()
     }
 
     private fun checkPlayService(): Boolean {
         var resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this)
 
-        if(resultCode != ConnectionResult.SUCCESS)
-        {
-            if(GooglePlayServicesUtil.isUserRecoverableError(resultCode))
-            {
-                GooglePlayServicesUtil.getErrorDialog(resultCode,this,PLAY_SERVICE_RESOLUTION_REQUEST).show()
-            }
-            else{
+        if (resultCode != ConnectionResult.SUCCESS) {
+            if (GooglePlayServicesUtil.isUserRecoverableError(resultCode)) {
+                GooglePlayServicesUtil.getErrorDialog(resultCode, this, PLAY_SERVICE_RESOLUTION_REQUEST).show()
+            } else {
                 Toast.makeText(applicationContext, "This device is not support", Toast.LENGTH_SHORT).show()
                 finish()
             }
@@ -141,34 +139,36 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks,Go
         mLocationRequest!!.fastestInterval = 5000 // 5 seconds
         mLocationRequest!!.priority = LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
 
-        if (ActivityCompat.checkSelfPermission(this,android.Manifest.permission.ACCESS_COARSE_LOCATION) !=PackageManager.PERMISSION_GRANTED
-                && ActivityCompat.checkSelfPermission(this,android.Manifest.permission.ACCESS_FINE_LOCATION) !=PackageManager.PERMISSION_GRANTED)
-        {
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
-          return
+            return
         }
-        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient,mLocationRequest,this)
+        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this)
+
 
     }
 
     override fun onConnectionFailed(p0: ConnectionResult) {
-        Log.i("Error","Connetion failed: " + p0.errorCode)
+        Log.i("Error", "Connetion failed: " + p0.errorCode)
         txtCity.text = "No location found, Please Check gps signal \n" +
                 "If it is OFF please clear this applications memory (settings>Applications>this application's name) \n" +
                 "Press force stop and clear the storage's cache and data \n" +
                 "Wait a minute or two for it to load up correctly"
     }
 
-    override fun onLocationChanged(location: Location) {
+    override fun onLocationChanged(location: Location  ) {
         mGoogleApiClient!!.connect()
 
-
-
-        GetWeather().execute(Common.apiRequest(location!!.latitude.toString(),location!!.longitude.toString()))
+        if(txtZipcode==txtCity)
+            GetZipWeather().execute(Common.apiZipRequest(txtCity!!.text.toString()))
+        else
+        GetWeather().execute(Common.apiRequest(location!!.latitude.toString(), location!!.longitude.toString()))
 
     }
+
     override fun onConnectionSuspended(p0: Int) {
-       mGoogleApiClient!!.connect()
+        mGoogleApiClient!!.connect()
     }
 
     override fun onStart() {
@@ -176,6 +176,7 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks,Go
 
         if (mGoogleApiClient != null)
             mGoogleApiClient!!.connect()
+
     }
 
     override fun onDestroy() {
@@ -187,13 +188,11 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks,Go
         super.onResume()
         checkPlayService()
     }
-     inner class GetWeather: AsyncTask<String,Void,String>()
-    {
 
-
+    inner class GetZipWeather : AsyncTask<String, Void, String>() {
         override fun doInBackground(vararg params: String?): String {
-            var stream:String?=null
-            var urlString=params[0]
+            var stream: String? = null
+            var urlString = params[0]
 
             val http = Helper()
 
@@ -201,8 +200,6 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks,Go
 
             return stream
         }
-
-
 
 
         override fun onPostExecute(result: String?) {
@@ -223,8 +220,6 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks,Go
             txtDescription.text = "Description: ${openWeatherMap.weather!![0].desciption}"
             txtTime.text = "Sunrise: ${Common.unixTimeStampToDateTime(openWeatherMap.sys!!.sunrise)} / Sunset: ${Common.unixTimeStampToDateTime(openWeatherMap.sys!!.sunset)}"
 
-
-            //txtHumidity.text ="${openWeatherMap.main!!.humidity}"
             Picasso.with(this@MainActivity)
                     .load(Common.getImage(openWeatherMap.weather!![0].icon!!))
                     .into(imageView)
@@ -232,7 +227,7 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks,Go
 
             imageSunRise.visibility = View.INVISIBLE
 
-                //morning sunrise colors
+            //morning sunrise colors
             if (localTime == { Common.unixTimeStampToDateTime(openWeatherMap.sys!!.sunrise) }) {
                 mainActivityID.setBackgroundColor(Color.parseColor("#DED2D8"))
                 imageSunRise.visibility = View.VISIBLE
@@ -245,15 +240,77 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks,Go
                 imageSunRise.visibility = View.INVISIBLE
                 imageSunSet.visibility = View.VISIBLE
                 imageNoonSun.visibility = View.INVISIBLE
-            }
-             else   //when its not sunrise or sunset because I couldn't pull local time and compare it to the value from openweathermap's string
+            } else   //when its not sunrise or sunset because I couldn't pull local time and compare it to the value from openweathermap's string
                 mainActivityID.setBackgroundColor(Color.parseColor("#FDF6E6"));
-                    imageSunRise.visibility = View.INVISIBLE
-                    imageSunSet.visibility = View.INVISIBLE
-                    imageNoonSun.visibility=View.VISIBLE
+            imageSunRise.visibility = View.INVISIBLE
+            imageSunSet.visibility = View.INVISIBLE
+            imageNoonSun.visibility = View.VISIBLE
         }
-            }
+    }
+
+    inner class GetWeather : AsyncTask<String, Void, String>() {
+
+
+        override fun doInBackground(vararg params: String?): String {
+            var stream: String? = null
+            var urlString = params[0]
+
+            val http = Helper()
+
+            stream = http.getHTTPData(urlString)
+
+            return stream
         }
+
+
+        override fun onPostExecute(result: String?) {
+            super.onPostExecute(result)
+
+
+            val gson = Gson()
+            val mType = object : TypeToken<OpenWeatherMap>() {}.type
+            val localTime = SimpleDateFormat("HH")
+
+            openWeatherMap = Gson().fromJson<OpenWeatherMap>(result, mType)
+
+
+            //setinformation into the UI
+            txtCity.text = "City: ${openWeatherMap.name}, ${openWeatherMap.sys!!.country}"
+            txtFahrenheit.text = "${openWeatherMap.main!!.temp} °F"
+            txtLastUpdate.text = "Last Updated: ${Common.dateNow}"
+            txtDescription.text = "Description: ${openWeatherMap.weather!![0].desciption}"
+            txtTime.text = "Sunrise: ${Common.unixTimeStampToDateTime(openWeatherMap.sys!!.sunrise)} / Sunset: ${Common.unixTimeStampToDateTime(openWeatherMap.sys!!.sunset)}"
+
+            Picasso.with(this@MainActivity)
+                    .load(Common.getImage(openWeatherMap.weather!![0].icon!!))
+                    .into(imageView)
+
+
+            imageSunRise.visibility = View.INVISIBLE
+
+            //morning sunrise colors
+            if (localTime == { Common.unixTimeStampToDateTime(openWeatherMap.sys!!.sunrise) }) {
+                mainActivityID.setBackgroundColor(Color.parseColor("#DED2D8"))
+                imageSunRise.visibility = View.VISIBLE
+                imageSunSet.visibility = View.INVISIBLE
+                imageNoonSun.visibility = View.INVISIBLE
+
+                //evening sunset colors
+            } else if (localTime == { Common.unixTimeStampToDateTime(openWeatherMap.sys!!.sunset) }) {
+                mainActivityID.setBackgroundColor(Color.parseColor("#DED2D8"));
+                imageSunRise.visibility = View.INVISIBLE
+                imageSunSet.visibility = View.VISIBLE
+                imageNoonSun.visibility = View.INVISIBLE
+            } else   //when its not sunrise or sunset because I couldn't pull local time and compare it to the value from openweathermap's string
+                mainActivityID.setBackgroundColor(Color.parseColor("#FDF6E6"));
+            imageSunRise.visibility = View.INVISIBLE
+            imageSunSet.visibility = View.INVISIBLE
+            imageNoonSun.visibility = View.VISIBLE
+        }
+    }
+}
+
+
 
 
 
