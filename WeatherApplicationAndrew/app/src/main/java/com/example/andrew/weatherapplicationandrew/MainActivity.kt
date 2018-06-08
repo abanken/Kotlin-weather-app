@@ -13,6 +13,7 @@ import android.util.Log
 import android.view.View
 import android.widget.EditText
 import android.widget.RelativeLayout
+import android.widget.TimePicker
 import android.widget.Toast
 import com.example.andrew.weatherapplicationandrew.Common.Common
 import com.example.andrew.weatherapplicationandrew.Model.OpenWeatherMap
@@ -28,6 +29,10 @@ import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.zipcodedialog.*
 import java.text.SimpleDateFormat
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
+import java.util.*
 
 
 class MainActivity : AppCompatActivity(),  GoogleApiClient.ConnectionCallbacks,GoogleApiClient.OnConnectionFailedListener,LocationListener {
@@ -208,7 +213,7 @@ class MainActivity : AppCompatActivity(),  GoogleApiClient.ConnectionCallbacks,G
 
             val gson = Gson()
             val mType = object : TypeToken<OpenWeatherMap>() {}.type
-            val localTime = SimpleDateFormat("HH")
+
 
             openWeatherMap = Gson().fromJson<OpenWeatherMap>(result, mType)
 
@@ -227,27 +232,60 @@ class MainActivity : AppCompatActivity(),  GoogleApiClient.ConnectionCallbacks,G
 
             imageSunRise.visibility = View.INVISIBLE
 
+
+            var c = Calendar.getInstance()
+            var localhour: Int = c.get(Calendar.HOUR_OF_DAY)
             //morning sunrise colors
-            if (localTime == { Common.unixTimeStampToDateTime(openWeatherMap.sys!!.sunrise) }) {
-                mainActivityID.setBackgroundColor(Color.parseColor("#DED2D8"))
+            if (localhour == 6) {
+
+                txtCity.setTextColor(Color.parseColor("#000000"));
+                txtFahrenheit.setTextColor(Color.parseColor("#000000"));
+                txtLastUpdate.setTextColor(Color.parseColor("#000000"));
+                txtDescription.setTextColor(Color.parseColor("#000000"));
+                txtTime.setTextColor(Color.parseColor("#000000"));
+                mainActivityID.setBackgroundColor(Color.parseColor("#DED2D8"));
+
                 imageSunRise.visibility = View.VISIBLE
                 imageSunSet.visibility = View.INVISIBLE
                 imageNoonSun.visibility = View.INVISIBLE
 
                 //evening sunset colors
-            } else if (localTime == { Common.unixTimeStampToDateTime(openWeatherMap.sys!!.sunset) }) {
+            } else if (localhour == 18){
+                txtCity.setTextColor(Color.parseColor("#000000"));
+                txtFahrenheit.setTextColor(Color.parseColor("#000000"));
+                txtLastUpdate.setTextColor(Color.parseColor("#000000"));
+                txtDescription.setTextColor(Color.parseColor("#000000"));
+                txtTime.setTextColor(Color.parseColor("#000000"));
                 mainActivityID.setBackgroundColor(Color.parseColor("#DED2D8"));
                 imageSunRise.visibility = View.INVISIBLE
                 imageSunSet.visibility = View.VISIBLE
                 imageNoonSun.visibility = View.INVISIBLE
-            } else   //when its not sunrise or sunset because I couldn't pull local time and compare it to the value from openweathermap's string
+            } //noon time
+            else if (localhour > 6 && localhour < 18) {
+                txtCity.setTextColor(Color.parseColor("#000000"));
+                txtFahrenheit.setTextColor(Color.parseColor("#000000"));
+                txtLastUpdate.setTextColor(Color.parseColor("#000000"));
+                txtDescription.setTextColor(Color.parseColor("#000000"));
+                txtTime.setTextColor(Color.parseColor("#000000"));
                 mainActivityID.setBackgroundColor(Color.parseColor("#FDF6E6"));
-            imageSunRise.visibility = View.INVISIBLE
-            imageSunSet.visibility = View.INVISIBLE
-            imageNoonSun.visibility = View.VISIBLE
+                imageSunRise.visibility = View.INVISIBLE
+                imageSunSet.visibility = View.INVISIBLE
+                imageNoonSun.visibility = View.VISIBLE
+            } // night time
+            else {
+                txtCity.text = localhour.toString()
+                mainActivityID.setBackgroundColor(Color.parseColor("#000000"));
+                txtCity.setTextColor(Color.parseColor("#ffffff"));
+                txtFahrenheit.setTextColor(Color.parseColor("#ffffff"));
+                txtLastUpdate.setTextColor(Color.parseColor("#ffffff"));
+                txtDescription.setTextColor(Color.parseColor("#ffffff"));
+                txtTime.setTextColor(Color.parseColor("#ffffff"));
+                imageSunRise.visibility = View.INVISIBLE
+                imageSunSet.visibility = View.INVISIBLE
+                imageNoonSun.visibility = View.INVISIBLE
+            }
         }
     }
-
     inner class GetWeather : AsyncTask<String, Void, String>() {
 
 
@@ -288,27 +326,63 @@ class MainActivity : AppCompatActivity(),  GoogleApiClient.ConnectionCallbacks,G
 
             imageSunRise.visibility = View.INVISIBLE
 
+            var c = Calendar.getInstance()
+            var localhour: Int = c.get(Calendar.HOUR_OF_DAY)
             //morning sunrise colors
-            if (localTime == { Common.unixTimeStampToDateTime(openWeatherMap.sys!!.sunrise) }) {
-                mainActivityID.setBackgroundColor(Color.parseColor("#DED2D8"))
+            if (localhour == 6) {
+
+                txtCity.setTextColor(Color.parseColor("#000000"));
+                txtFahrenheit.setTextColor(Color.parseColor("#000000"));
+                txtLastUpdate.setTextColor(Color.parseColor("#000000"));
+                txtDescription.setTextColor(Color.parseColor("#000000"));
+                txtTime.setTextColor(Color.parseColor("#000000"));
+                mainActivityID.setBackgroundColor(Color.parseColor("#DED2D8"));
+
                 imageSunRise.visibility = View.VISIBLE
                 imageSunSet.visibility = View.INVISIBLE
                 imageNoonSun.visibility = View.INVISIBLE
 
                 //evening sunset colors
-            } else if (localTime == { Common.unixTimeStampToDateTime(openWeatherMap.sys!!.sunset) }) {
+            } else if (localhour == 18){
+                txtCity.setTextColor(Color.parseColor("#000000"));
+                txtFahrenheit.setTextColor(Color.parseColor("#000000"));
+                txtLastUpdate.setTextColor(Color.parseColor("#000000"));
+                txtDescription.setTextColor(Color.parseColor("#000000"));
+                txtTime.setTextColor(Color.parseColor("#000000"));
                 mainActivityID.setBackgroundColor(Color.parseColor("#DED2D8"));
                 imageSunRise.visibility = View.INVISIBLE
                 imageSunSet.visibility = View.VISIBLE
                 imageNoonSun.visibility = View.INVISIBLE
-            } else   //when its not sunrise or sunset because I couldn't pull local time and compare it to the value from openweathermap's string
+            } //noon time
+            else if (localhour > 6 && localhour < 18) {
+                txtCity.setTextColor(Color.parseColor("#000000"));
+                txtFahrenheit.setTextColor(Color.parseColor("#000000"));
+                txtLastUpdate.setTextColor(Color.parseColor("#000000"));
+                txtDescription.setTextColor(Color.parseColor("#000000"));
+                txtTime.setTextColor(Color.parseColor("#000000"));
                 mainActivityID.setBackgroundColor(Color.parseColor("#FDF6E6"));
-            imageSunRise.visibility = View.INVISIBLE
-            imageSunSet.visibility = View.INVISIBLE
-            imageNoonSun.visibility = View.VISIBLE
+                imageSunRise.visibility = View.INVISIBLE
+                imageSunSet.visibility = View.INVISIBLE
+                imageNoonSun.visibility = View.VISIBLE
+            } // night time
+            else {
+                txtCity.text = localhour.toString()
+                mainActivityID.setBackgroundColor(Color.parseColor("#000000"));
+                txtCity.setTextColor(Color.parseColor("#ffffff"));
+                txtFahrenheit.setTextColor(Color.parseColor("#ffffff"));
+                txtLastUpdate.setTextColor(Color.parseColor("#ffffff"));
+                txtDescription.setTextColor(Color.parseColor("#ffffff"));
+                txtTime.setTextColor(Color.parseColor("#ffffff"));
+                imageSunRise.visibility = View.INVISIBLE
+                imageSunSet.visibility = View.INVISIBLE
+                imageNoonSun.visibility = View.INVISIBLE
+            }
         }
+
     }
 }
+
+
 
 
 

@@ -24,7 +24,7 @@ object Common {
         return sb.toString()
     }
 
-    fun unixTimeStampToDateTime(unixTimeStamp:Double): String{
+    fun unixTimeStampToDateTime(unixTimeStamp:Int): String{
         val dateFormat = SimpleDateFormat("HH:mm")
         val date = Date()
         date.time = unixTimeStamp.toLong()*1000
