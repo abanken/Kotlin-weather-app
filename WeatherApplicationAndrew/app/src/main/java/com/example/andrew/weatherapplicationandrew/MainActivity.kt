@@ -1,4 +1,4 @@
-package com.example.andrew.weatherapplicationandrew
+﻿package com.example.andrew.weatherapplicationandrew
 
 import android.app.AlertDialog
 import android.content.DialogInterface
@@ -222,7 +222,7 @@ class MainActivity : AppCompatActivity(),  GoogleApiClient.ConnectionCallbacks,G
             txtCity.text = "City: ${openWeatherMap.name}, ${openWeatherMap.sys!!.country}"
             txtFahrenheit.text = "${openWeatherMap.main!!.temp} °F"
             txtLastUpdate.text = "Last Updated: ${Common.dateNow}"
-            txtDescription.text = "Description: ${openWeatherMap.weather!![0].desciption}"
+            txtDescription.text = "Description: ${openWeatherMap.weather!![0].description}"
             txtTime.text = "Sunrise: ${Common.unixTimeStampToDateTime(openWeatherMap.sys!!.sunrise)} / Sunset: ${Common.unixTimeStampToDateTime(openWeatherMap.sys!!.sunset)}"
 
             Picasso.with(this@MainActivity)
@@ -304,10 +304,8 @@ class MainActivity : AppCompatActivity(),  GoogleApiClient.ConnectionCallbacks,G
         override fun onPostExecute(result: String?) {
             super.onPostExecute(result)
 
-
             val gson = Gson()
             val mType = object : TypeToken<OpenWeatherMap>() {}.type
-            val localTime = SimpleDateFormat("HH")
 
             openWeatherMap = Gson().fromJson<OpenWeatherMap>(result, mType)
 
@@ -316,7 +314,7 @@ class MainActivity : AppCompatActivity(),  GoogleApiClient.ConnectionCallbacks,G
             txtCity.text = "City: ${openWeatherMap.name}, ${openWeatherMap.sys!!.country}"
             txtFahrenheit.text = "${openWeatherMap.main!!.temp} °F"
             txtLastUpdate.text = "Last Updated: ${Common.dateNow}"
-            txtDescription.text = "Description: ${openWeatherMap.weather!![0].desciption}"
+            txtDescription.text = "Description: ${openWeatherMap.weather!![0].description}"
             txtTime.text = "Sunrise: ${Common.unixTimeStampToDateTime(openWeatherMap.sys!!.sunrise)} / Sunset: ${Common.unixTimeStampToDateTime(openWeatherMap.sys!!.sunset)}"
 
             Picasso.with(this@MainActivity)
